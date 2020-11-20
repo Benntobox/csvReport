@@ -1,17 +1,19 @@
-// var express = require('express');
-// var app = express();
-// var port = 3000;
+var express = require('express');
+var app = express();
+var path = require('path');
 
-// app.use(express.static('client'));
+app.use(express.static('client'));
 
-// app.use('/', (req, res) => {
-//   res.send('Testing');
-//   console.log('Using');
-// });
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname + '/index.html'));
+  console.log(req.body);
+  console.log('Using');
+});
 
-// app.get('/', (req, res) => {
-//   res.send('Got stuff');
-//   console.log('Getting');
-// });
+app.post('/', (req, res) => {
+  console.log('STuff was posted');
+  console.log(res.json());
+  res.status(200).json(req.json);
+});
 
-// app.listen(port, () => console.log('Listening in!'));
+module.exports = app;
