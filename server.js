@@ -1,6 +1,7 @@
 var express = require('express');
 var app = express();
 var bodyparser = require('body-parser');
+var fs = require('fs')
 const port = 3000;
 
 app.use(bodyparser.urlencoded({ extended: false }));
@@ -15,10 +16,18 @@ app.get('/', (req, res, next) => {
 
 app.post('/', (req, res, next) => {
   console.log('Form was posted');
-  res.setHeader('Content-type','text/html');
-  res.status(200).send(formHtml + jsonToCsv(req.body['data']));
-  res.end();
-  next();
+  fs.readFile(req.body['data'], (err, data) => {
+    if (err) { 
+      res.status(404); 
+      res.end(); 
+      next(); 
+    } else { 
+      res.setHeader('Content-type','text/html');
+      res.send(formHtml + jsonToCsv(data.toString()));
+      res.end();
+      next();
+     }
+  });
 });
 
 var jsonToCsv = function (data) {
@@ -49,8 +58,8 @@ var getValuesRecursive = function (data) {
 }
 
 var formHtml = `<form method='POST' id='entryForm'>
-  <textarea form='entryForm' name='data'></textarea>
-  <input type='submit' value='Submit'></input>
-  </form>`
+<input type='file' name='data' value='Choose a file'></textarea>
+<input type='submit' value='Submit'></input>
+</form>`
 
 app.listen(port, () => console.log('Listening!'));
