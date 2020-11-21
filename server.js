@@ -14,24 +14,35 @@ app.get('/', (req, res, next) => {
 
 app.post('/', (req, res, next) => {
   console.log('Form was posted');
-  console.log(req.body['data']);
   res.status(200).json(jsonToCsv(req.body['data']));
   res.end();
 });
 
 var jsonToCsv = function (data) {
+  data = JSON.parse(data);
   let headers = "";
-  let values = "";
-  console.log('preflat', JSON.parse(data))
-  data = flattenJson(JSON.parse(data));
-  console.log('flattened', data)
   for (let key in data) {
-    headers += headers ? ',' + key : key;
-    values += values ? ',' + data[key] : data[key];
+    if (key !== 'children') {
+      headers += headers ? ',' + key : key;
+    }
   }
-  console.log('headers', headers)
-  console.log('values', values)
+  let values = getValuesRecursive(data);
   return headers + '\n' + values;
+}
+
+var getValuesRecursive = function (data) {
+  let values = "";
+  for (let key in data) {
+    if (key !== 'children') { 
+      values += values ? ',' + data[key] : data[key];
+    } else {
+      for (let child of data['children']) {
+        values += '\n'
+        values = values.concat(getValuesRecursive(child))
+      }
+    }
+  }
+  return values;
 }
 
 var flattenJson = function (data, results={}, parent=null) {
