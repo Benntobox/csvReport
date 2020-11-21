@@ -10,12 +10,15 @@ app.get('/', (req, res, next) => {
   console.log('Getting', req.body);
   res.status(200).location('/');
   res.end();
+  next()
 });
 
 app.post('/', (req, res, next) => {
   console.log('Form was posted');
-  res.status(200).json(jsonToCsv(req.body['data']));
+  res.setHeader('Content-type','text/html');
+  res.status(200).send(formHtml + jsonToCsv(req.body['data']));
   res.end();
+  next();
 });
 
 var jsonToCsv = function (data) {
@@ -45,16 +48,9 @@ var getValuesRecursive = function (data) {
   return values;
 }
 
-var flattenJson = function (data, results={}, parent=null) {
-  for (let key in data) {
-    if (typeof(data[key]) === 'object') {
-      flattenJson(data[key], results, key)
-    } else {
-      combined = parent ? parent + "." + key : key;
-      results[combined] = data[key];
-    }
-  }
-  return results;
-}
+var formHtml = `<form method='POST' id='entryForm'>
+  <textarea form='entryForm' name='data'></textarea>
+  <input type='submit' value='Submit'></input>
+  </form>`
 
 app.listen(port, () => console.log('Listening!'));
