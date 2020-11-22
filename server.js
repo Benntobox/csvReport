@@ -1,21 +1,23 @@
 var express = require('express');
 var app = express();
 var bodyparser = require('body-parser');
-var fs = require('fs')
+var fs = require('fs');
 const port = 3000;
+
+var lastPost;
 
 app.use(bodyparser.urlencoded({ extended: false }));
 app.use(express.static('client'));
 
 app.get('/', (req, res, next) => {
   console.log('Getting', req.body);
-  res.status(200).location('/');
+  res.status(200).send(lastPost);
   res.end();
   next()
 });
 
 app.post('/', (req, res, next) => {
-  console.log('Form was posted');
+  console.log('Form was posted', req.body);
   fs.readFile(req.body['data'], (err, data) => {
     if (err) { 
       res.status(404); 
@@ -23,7 +25,9 @@ app.post('/', (req, res, next) => {
       next(); 
     } else { 
       res.setHeader('Content-type','text/html');
-      res.send(formHtml + jsonToCsv(data.toString()));
+      let result = jsonToCsv(data.toString())
+      lastPost = result;
+      res.send(formHtml + result);
       res.end();
       next();
      }
