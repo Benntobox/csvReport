@@ -4,30 +4,27 @@ var bodyparser = require('body-parser');
 var fs = require('fs');
 const port = 3000;
 
-var lastPost;
-
 app.use(bodyparser.urlencoded({ extended: false }));
 app.use(express.static('client'));
 
 app.get('/', (req, res, next) => {
-  console.log('Getting', req.body);
-  res.status(200).send(lastPost);
+  res.status(200).location('/').sendFile(__dirname + 'lastPost');
   res.end();
   next()
 });
 
 app.post('/', (req, res, next) => {
-  console.log('Form was posted', req.body);
+  lastPost = req.body['data'];
   fs.readFile(req.body['data'], (err, data) => {
     if (err) { 
       res.status(404); 
       res.end(); 
       next(); 
     } else { 
-      res.setHeader('Content-type','text/html');
-      let result = jsonToCsv(data.toString())
-      lastPost = result;
-      res.send(formHtml + result);
+      let result = jsonToCsv(data.toString());
+      if (result === 'bad input') { res.send('input improperly formatted'); res.end(); next(); }
+      fs.writeFile('lastPost', result, ()=>{});
+      res.send(result);
       res.end();
       next();
      }
@@ -35,7 +32,12 @@ app.post('/', (req, res, next) => {
 });
 
 var jsonToCsv = function (data) {
-  data = JSON.parse(data);
+  try {
+    data = JSON.parse(data);
+  }
+  catch {
+    return 'bad input';
+  }
   let headers = "";
   for (let key in data) {
     if (key !== 'children') {
